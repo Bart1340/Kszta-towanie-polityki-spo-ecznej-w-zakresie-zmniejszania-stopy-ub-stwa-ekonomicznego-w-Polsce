@@ -1,0 +1,904 @@
+---
+title: "Kształtowanie polityki społecznej w zakresie zmniejszania stopy ubóstwa ekonomicznego w Polsce. Ocena efektywności obecnych narzędzi poprzez analizę wydatków budżetowych z wykorzystaniem modelu regresji liniowej." 
+output:
+  html_document:
+    fig_width: 12
+    fig_height: 8
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ładowanie bibliotek
+
+```{r}
+
+library(readxl)
+library(ggplot2)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+library(ggthemes)
+options(scipen = 999)
+
+```
+
+## Ładowanie danych
+
+```{r}
+excel_file <- "ProjektDane.xlsx"
+
+sheet_name1 <- "WszystkieDziały"
+sheet_name2 <- "WszystkieDziałyProcent"
+sheet_name3 <- "BezUbezpieczeń"
+sheet_name4 <- "BezUbezpieczeńProcent"
+sheet_name5 <- "Ubezpieczenia"
+sheet_name6 <- "UbezpieczeniaProcent"
+sheet_name7 <- "Progi1"
+sheet_name8 <- "Progi4"
+sheet_name9 <- "UbóstwoProcent"
+
+WszystkieDziały <- read_excel(excel_file, sheet = sheet_name1, col_names = TRUE)
+WszystkieDziałyProcent <- read_excel(excel_file, sheet = sheet_name2, col_names = TRUE)
+BezUbezpieczeń <- read_excel(excel_file, sheet = sheet_name3, col_names = TRUE)
+BezUbezpieczeńProcent <- read_excel(excel_file, sheet = sheet_name4, col_names = TRUE)
+Ubezpieczenia <- read_excel(excel_file, sheet = sheet_name5, col_names = TRUE)
+UbezpieczeniaProcent <- read_excel(excel_file, sheet = sheet_name6, col_names = TRUE)
+Progi1 <- read_excel(excel_file, sheet = sheet_name7, col_names = TRUE)
+Progi4 <- read_excel(excel_file, sheet = sheet_name8, col_names = TRUE)
+UbóstwoProcent <- read_excel(excel_file, sheet = sheet_name9, col_names = TRUE)
+```
+
+## Przedstawienie danych
+
+### Wydatki budżetowe na politykę społeczną razem
+
+#### Tabela.1
+
+```{r}
+WszystkieDziałyTabelaDane <- t(WszystkieDziały)
+colnames(WszystkieDziałyTabelaDane) <- WszystkieDziałyTabelaDane[1, ]
+WszystkieDziałyTabelaDane <- WszystkieDziałyTabelaDane[-1, ]
+
+WszystkieDziałyTabela <- kable(WszystkieDziałyTabelaDane, table.attr = "class='table'",align = "c", digits = 2) %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wydatki budżetowe na politykę społeczną w latach 2008-2022 (w mld zł)" = 16), align = "center")
+
+WszystkieDziałyTabela
+```
+
+#### Wykres.1
+
+```{r}
+WszystkieDziałyWykres2 <- ggplot(WszystkieDziały, aes(x = Rok, fill = "blue", show.legend = FALSE)) +
+  geom_col(aes(y = Razem), show.legend = FALSE) +
+  scale_y_continuous(breaks = seq(0, max(200), by = 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  
+  labs(
+    title = "Wydatki budżetowe na politykę społeczną w latach 2008-2022 (w mld zł)",
+    x = "Rok",
+    y = "Wydatki w mld zł",
+  )
+
+WszystkieDziałyWykres2
+```
+
+#### Wykres.2
+
+```{r}
+WszystkieDziałyWykres1 <- ggplot(WszystkieDziały, aes(x = Rok)) +
+  geom_line(aes(y = `Rodzina`, group = 1, color = "Rodzina"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Rodzina`, color = "Rodzina"), size = 3) +
+  
+  geom_line(aes(y = `Pomoc społeczna`, group = 1, color = "Pomoc społeczna"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Pomoc społeczna`, color = "Pomoc społeczna"), size = 3) +
+  
+  geom_line(aes(y = `Obowiązkowe ubezpieczenia społeczne`, group = 1, color = "Obowiązkowe ubezpieczenia społeczne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Obowiązkowe ubezpieczenia społeczne`, color = "Obowiązkowe ubezpieczenia społeczne"), size = 3) +
+  
+  geom_line(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, group = 1, color = "Pozostałe zadania w zakresie polityki społecznej"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, color = "Pozostałe zadania w zakresie polityki społecznej"), size = 3) +
+
+  scale_y_continuous(breaks = seq(0, max(100), by = 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  theme(legend.position = "left") +
+  
+  labs(
+    title = "Wydatki budżetowe na politykę społeczną w latach 2008-2022 (w mld zł)",
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Działy budżetowe"
+  )
+
+WszystkieDziałyWykres1
+```
+
+#### Tabela.2
+
+```{r}
+WszystkieDziałyProcentTabelaDane <- t(WszystkieDziałyProcent)
+colnames(WszystkieDziałyProcentTabelaDane) <- WszystkieDziałyProcentTabelaDane[1, ]
+WszystkieDziałyProcentTabelaDane <- WszystkieDziałyProcentTabelaDane[-1, ]
+
+WszystkieDziałyProcentTabela <- kable(WszystkieDziałyProcentTabelaDane, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Udział wydatków na politykę społeczną w budżecie państwa w latach 2008-2022 (w mld zł)" = 16), align = "center")
+
+WszystkieDziałyProcentTabela
+```
+
+#### Wykres.3
+
+```{r}
+WszystkieDziałyProcentWykres1 <- ggplot(WszystkieDziałyProcent, aes(x = Rok)) +
+  geom_line(aes(y = `Wydatki % na politykę społeczną`, group = 1, color = "blue"), show.legend = FALSE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Wydatki % na politykę społeczną`, color = "blue"), show.legend = FALSE, size = 3) +
+  scale_y_continuous(
+    breaks = seq(0, 40, by = 5),
+    limits = c(0, 40),
+    expand = c(0, 5)
+  ) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  labs(
+    title = "Udział wydatków na politykę społeczną w budżecie państwa w latach 2008-2022 (w %)",
+    x = "Rok",
+    y = "Udział w %"
+  )
+
+WszystkieDziałyProcentWykres1
+
+```
+
+#### Wykres.4
+
+```{r}
+WszystkieDziałyProcentWykres2 <- ggplot(WszystkieDziałyProcent, aes(x = Rok)) +
+  geom_line(aes(y = `Wydatki % na politykę społeczną`, group = 1, color = "blue"), show.legend = FALSE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Wydatki % na politykę społeczną`, color = "blue"), show.legend = FALSE, size = 3) +
+  scale_y_continuous(
+    breaks = seq(25, 40, by = 1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  theme(legend.position = "left") +
+  labs(
+    title = "Udział wydatków na politykę społeczną w budżecie państwa w latach 2008-2022 (w %)",
+    x = "Rok",
+    y = "Udział w %",
+  )
+
+WszystkieDziałyProcentWykres2
+
+```
+
+### Wydatki z wyłączeniem ubezpieczeń społecznych
+
+#### Wykres.5
+
+```{r}
+BezUbezpieczeńWykres1 <- ggplot(BezUbezpieczeń, aes(x = Rok, fill = "blue", show.legend = FALSE)) +
+  geom_col(aes(y = Razem), show.legend = FALSE) +
+  scale_y_continuous(breaks = seq(0, max(200), by = 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  
+  labs(
+    title = "Wydatki budżetowe na politykę społeczną z wyłączeniem działu 'obowiązkowe ubezpieczenia społeczne' w latach 2008-2022 (w mld zł)",
+    x = "Rok",
+    y = "Wydatki w mld zł",
+  )
+
+BezUbezpieczeńWykres1
+```
+
+#### Tabela.3
+
+```{r}
+BezUbezpieczeńProcentTabelaDane <- t( BezUbezpieczeńProcent)
+colnames(BezUbezpieczeńProcentTabelaDane) <- BezUbezpieczeńProcentTabelaDane[1, ]
+BezUbezpieczeńProcentTabelaDane <- BezUbezpieczeńProcentTabelaDane[-1, ]
+
+BezUbezpieczeńProcentTabela <- kable(BezUbezpieczeńProcentTabelaDane, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Udział wydatków na politykę społeczną z wyłączeniem działu 'obowiązkowe ubezpieczenia społeczne' w budżecie państwa w latach 2008-2022 (w mld zł)" = 16), align = "center")
+
+BezUbezpieczeńProcentTabela
+```
+
+#### Wykres.6
+
+```{r}
+BezUbezpieczeńProcentWykres <- ggplot(BezUbezpieczeńProcent, aes(x = Rok)) +
+  geom_line(aes(y = `Wydatki % na politykę społeczną`, group = 1, color = "blue"), show.legend = FALSE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Wydatki % na politykę społeczną`, color = "blue"), show.legend = FALSE, size = 3) +
+  scale_y_continuous(
+    breaks = seq(0, 20, by = 5),
+    limits = c(0, 20),
+    expand = c(0, 5)
+  ) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  labs(
+    title = "Udział wydatków na politykę społeczną z wyłączeniem działu 'obowiązkowe ubezpieczenia społeczne' w budżecie państwa \nw latach 2008-2022 (w %)",
+    x = "Rok",
+    y = "Udział w %"
+  )
+
+BezUbezpieczeńProcentWykres
+```
+
+### Wydatki na ubezpieczenia społeczne
+
+#### Wykres.7
+
+```{r}
+UbezpieczeniaWykres1 <- ggplot(Ubezpieczenia, aes(x = Rok, fill = "blue", show.legend = FALSE)) +
+  geom_col(aes(y = `Obowiązkowe ubezpieczenia społeczne`), show.legend = FALSE) +
+  scale_y_continuous(breaks = seq(0, max(200), by = 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  
+  labs(
+    title = "Wydatki budżetowe na politykę społeczną z działu 'obowiązkowe ubezpieczenia społeczne' w latach 2008-2022 (w mld zł)",
+    x = "Rok",
+    y = "Wydatki w mld zł",
+  )
+
+UbezpieczeniaWykres1
+```
+
+#### Tabela.4
+
+```{r}
+UbezpieczeniaProcentTabelaDane <- t(UbezpieczeniaProcent)
+colnames(UbezpieczeniaProcentTabelaDane) <- UbezpieczeniaProcentTabelaDane[1, ]
+UbezpieczeniaProcentTabelaDane <- UbezpieczeniaProcentTabelaDane[-1, ]
+
+UbezpieczeniaProcentTabela <- kable(UbezpieczeniaProcentTabelaDane, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Udział wydatków na politykę społeczną z działu 'obowiązkowe ubezpieczenia społeczne' w budżecie państwa w latach 2008-2022 (w mld zł)" = 16), align = "center")
+
+UbezpieczeniaProcentTabela
+
+```
+
+#### Wykres.8
+
+```{r}
+UbezpieczeniaProcentWykres <- ggplot(UbezpieczeniaProcent, aes(x = Rok)) +
+  geom_line(aes(y = `Wydatki % na politykę społeczną`, group = 1, color = "blue"), show.legend = FALSE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Wydatki % na politykę społeczną`, color = "blue"), show.legend = FALSE, size = 3) +
+  scale_y_continuous(
+    breaks = seq(0, 40, by = 5),
+    limits = c(0, 40),
+    expand = c(0, 5)
+  ) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  labs(
+    title = "Udział wydatków na politykę społeczną z działu 'obowiązkowe ubezpieczenia społeczne' w budżecie państwa w latach 2008-2022 (w %)",
+    x = "Rok",
+    y = "Udział w %"
+  )
+
+UbezpieczeniaProcentWykres
+```
+
+#### Wykres 9.
+
+```{r}
+UbezpieczeniaProcentWykres2 <- ggplot(UbezpieczeniaProcent, aes(x = Rok)) +
+  geom_line(aes(y = `Wydatki % na politykę społeczną`, group = 1, color = "blue"), show.legend = FALSE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Wydatki % na politykę społeczną`, color = "blue"), show.legend = FALSE, size = 3) +
+  scale_y_continuous(
+    breaks = seq(10, 40, by = 1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  labs(
+    title = "Udział wydatków na politykę społeczną z działu 'obowiązkowe ubezpieczenia społeczne' w budżecie państwa w latach 2008-2022 (w %)",
+    x = "Rok",
+    y = "Udział w %"
+  )
+
+UbezpieczeniaProcentWykres2
+```
+
+#### Tabela 5.
+
+```{r}
+Progi1TabelaDane <- t(Progi1)
+colnames(Progi1TabelaDane) <- Progi1TabelaDane[1, ]
+Progi1TabelaDane <- Progi1TabelaDane[-1, ]
+
+Progi1Tabela <- kable(Progi1TabelaDane, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Progi ubóstwa dla gospodarstw 1 - osobowych (w zł)" = 16), align = "center")
+
+Progi1Tabela
+```
+
+#### Wykres.10
+
+```{r}
+Progi1Wykres <- ggplot(Progi1, aes(x = Rok)) +
+  geom_line(aes(y = `próg ubóstwa skrajnego`, group = 1, color = "próg ubóstwa skrajnego"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `próg ubóstwa skrajnego`, color = "próg ubóstwa skrajnego"), size = 3) +
+  
+  geom_line(aes(y = `próg ubóstwa relatywnego`, group = 1, color = "próg ubóstwa relatywnego"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `próg ubóstwa relatywnego`, color = "próg ubóstwa relatywnego"), size = 3) +
+  
+  geom_line(aes(y = `próg ubóstwa ustawowego`, group = 1, color = "próg ubóstwa ustawowego"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `próg ubóstwa ustawowego`, color = "próg ubóstwa ustawowego"), size = 3) +
+  
+  geom_line(aes(y = `próg sfery niedostatku`, group = 1, color = "próg sfery niedostatku"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `próg sfery niedostatku`, color = "próg sfery niedostatku"), size = 3) +
+  scale_y_continuous(
+    breaks = seq(0, 1600, by = 100),
+    limits = c(0, 1600),
+    expand = c(0, 100)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  theme(legend.position = "left") +
+  
+  labs(
+    title = "Progi ubóstwa dla gospodarstw 1-osobowych w latach 2008-2022 (w zł) ",
+    x = "Rok",
+    y = "Wysokość progu w zł",
+    color = "Progi ubóstwa"
+  )
+
+Progi1Wykres
+
+```
+
+#### Tabela.6
+
+```{r}
+UbóstwoProcentDane <- t(UbóstwoProcent)
+colnames(UbóstwoProcentDane) <- UbóstwoProcentDane[1, ]
+UbóstwoProcentDane <- UbóstwoProcentDane[-1, ]
+
+UbóstwoProcentTabela <- kable(UbóstwoProcentDane, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Zasięg ubóstwa ekonomicznego w latach 2008-2022 (w %)" = 16), align = "center")
+
+UbóstwoProcentTabela
+```
+
+#### Wykres.11
+
+```{r}
+UbóstwoProcentWykres1 <- ggplot(UbóstwoProcent, aes(x = Rok)) +
+  geom_line(aes(y = `ubóstwo skrajne (minimum egzystencji)`, group = 1, color = "ubóstwo skrajne (minimum egzystencji)"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `ubóstwo skrajne (minimum egzystencji)`, color = "ubóstwo skrajne (minimum egzystencji)"), size = 3) +
+  
+  geom_line(aes(y = `ubóstwo relatywne`, group = 1, color = "ubóstwo relatywne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `ubóstwo relatywne`, color = "ubóstwo relatywne"), size = 3) +
+  
+  geom_line(aes(y = `ubóstwo ustawowe`, group = 1, color = "ubóstwo ustawowe"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `ubóstwo ustawowe`, color = "ubóstwo ustawowe"), size = 3) +
+  
+  geom_line(aes(y = `sfera niedostatku`, group = 1, color = "sfera niedostatku"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `sfera niedostatku`, color = "sfera niedostatku"), size = 3) +
+  scale_y_continuous(
+    breaks = seq(0, 50, by = 5),
+    limits = c(0, 50),
+    expand = c(0, 5)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  theme(legend.position = "left") +
+  
+  labs(
+    title = "Zasięg ubóstwa ekonomicznego w latach 2008-2022 (w %)",
+    x = "Rok",
+    y = "Zasieg w %",
+    color = "Wskaźniki ubóstwa"
+  )
+
+UbóstwoProcentWykres1
+```
+
+#### Wykres.12
+
+```{r}
+### UbóstwoProcentWykres2
+
+UbóstwoProcentWykres2 <- ggplot(UbóstwoProcent, aes(x = Rok)) +
+  geom_line(aes(y = `ubóstwo skrajne (minimum egzystencji)`, group = 1, color = "ubóstwo skrajne (minimum egzystencji)"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `ubóstwo skrajne (minimum egzystencji)`, color = "ubóstwo skrajne (minimum egzystencji)"), size = 3) +
+  
+  geom_line(aes(y = `ubóstwo relatywne`, group = 1, color = "ubóstwo relatywne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `ubóstwo relatywne`, color = "ubóstwo relatywne"), size = 3) +
+  
+  geom_line(aes(y = `ubóstwo ustawowe`, group = 1, color = "ubóstwo ustawowe"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `ubóstwo ustawowe`, color = "ubóstwo ustawowe"), size = 3) +
+  
+  scale_y_continuous(
+    breaks = seq(0, 20, by = 1),
+    limits = c(0, 20),
+    expand = c(0, 1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  theme(legend.position = "left") +
+  
+  labs(
+    title = "Zasięg ubóstwa ekonomicznego z wyłączeniem sfery niedostatku w latach 2008-2022 (w %)",
+    x = "Rok",
+    y = "Zasięg w %",
+    color = "Wskaźniki ubóstwa"
+  )
+
+UbóstwoProcentWykres2
+
+```
+
+#### Wykres.13
+
+```{r}
+UbóstwoProcentWykres3 <- ggplot(UbóstwoProcent, aes(x = Rok, show.legend = FALSE)) +
+  geom_line(aes(y = `sfera niedostatku`, group = 1, color = "sfera niedostatku"), show.legend = FALSE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `sfera niedostatku`, color = "sfera niedostatku"), size = 3, show.legend = FALSE) + 
+
+  scale_y_continuous(
+    breaks = seq(35, 50, by = 1),
+    limits = c(35, 50),
+    expand = c(0, 1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  theme(legend.position = "left") +
+  
+  labs(
+    title = "Zasięg sfery niedostatku w latach 2008-2022 (w %) ",
+    x = "Rok",
+    y = "Zasięg w %",
+  )
+
+UbóstwoProcentWykres3
+
+```
+
+## Współczynnik korelacji liniowej Pearsona
+
+### Przygotowanie danych
+
+```{r}
+RegresjaDane <- data.frame(
+  `Razem` = WszystkieDziały$`Razem`,
+  `Bez Ubezpieczeń` = BezUbezpieczeń$Razem,
+  `Obowiązkowe ubezpieczenia społeczne`= WszystkieDziały$`Obowiązkowe ubezpieczenia społeczne`,
+  `Pomoc społeczna` = WszystkieDziały$`Pomoc społeczna`,
+  `Pozostałe zadania w zakresie polityki społecznej` = WszystkieDziały$`Pozostałe zadania w zakresie polityki społecznej`,
+  `Rodzina` = WszystkieDziały$`Rodzina`,
+  
+  `Ubóstwo skrajne` = UbóstwoProcent$`ubóstwo skrajne (minimum egzystencji)`,
+  `Ubóstwo relatywne` = UbóstwoProcent$`ubóstwo relatywne`,
+  `Ubóstwo ustawowe` = UbóstwoProcent$`ubóstwo ustawowe`,
+  `sfera niedostatku` = UbóstwoProcent$`sfera niedostatku`
+)
+```
+
+#### Tabela.7
+
+```{r}
+PearsonSkrajne1 <- cor(RegresjaDane$Razem, RegresjaDane$Ubóstwo.skrajne)
+PearsonRelatywne1 <- cor(RegresjaDane$Razem, RegresjaDane$Ubóstwo.relatywne)
+PearsonUstawowe1 <- cor(RegresjaDane$Razem, RegresjaDane$Ubóstwo.ustawowe)
+PearsonNiedostatek1 <- cor(RegresjaDane$Razem, RegresjaDane$sfera.niedostatku)
+
+PearsonDf1 <- data.frame(
+  `Ubóstwo skrajne` = PearsonSkrajne1,
+  `Ubóstwo relatywne` = PearsonRelatywne1,
+  `Ubóstwo ustawowe` = PearsonUstawowe1,
+  `sfera niedostatku` = PearsonNiedostatek1
+)
+
+rownames(PearsonDf1) <- 'Korelacja Pearsona'
+
+PearsonDf1Tabela <- kable(PearsonDf1, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Korelacja pomiędzy wydatkami na politykę społeczną a ubóstwem" = 5), align = "center")
+
+PearsonDf1Tabela
+```
+
+## Model Regresji: ubóstwo skrajne
+
+```{r}
+regresjaRazem1 <- lm(Ubóstwo.skrajne ~ Razem, data = RegresjaDane)
+
+r_squaredRazem1 <- round(summary(regresjaRazem1)$r.squared, 4)
+p_valueRazem1 <- round(summary(regresjaRazem1)$coefficients[2, 4], 4)
+```
+
+#### Wykres.14
+
+```{r}
+regresjaRazem1wykres1 <- ggplot(RegresjaDane, aes(x = Razem, y = `Ubóstwo.skrajne`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$Ubóstwo.skrajne))) +
+  labs(title = "Korelacja: wydatki/ubóstwo skrajne",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Stopień ubóstwa skrajnego (w %)") +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata()
+regresjaRazem1wykres1
+```
+
+#### Wykres.15
+
+```{r}
+regresjaRazem1wykres2 <- ggplot(RegresjaDane, aes(x = Razem, y = `Ubóstwo.skrajne`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$Ubóstwo.skrajne))) +
+  geom_abline(intercept = coef(regresjaRazem1)[1], slope = coef(regresjaRazem1)[2], color = "red", size = 1.5) +
+  labs(title = "Wykres regresji: wydatki/ubóstwo skrajne",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Stopień ubóstwa skrajnego (w %)")+
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  geom_text(x = max(RegresjaDane$Razem), y = max(RegresjaDane$Ubóstwo.skrajne),
+          label = paste("Równanie regresji: y =", round(coef(regresjaRazem1)[1], 4), "+", round(coef(regresjaRazem1)[2], 4), "x\nWspółczynnik determinancji =", r_squaredRazem1, "\nWartość p =", p_valueRazem1),
+          hjust = 1, vjust = 1, color = "black", size = 2.5)
+
+regresjaRazem1wykres2 
+```
+
+#### Tabela.8
+
+```{r}
+regresjaRazem1podsumowanie <- summary(regresjaRazem1)
+regresjaRazem1wyniki <- as.data.frame(regresjaRazem1podsumowanie$coefficients)
+
+colnames(regresjaRazem1wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazem1wyniki) <- c("Wyraz wolny", "Współczynnik kierunkowy regresji")
+
+regresjaRazem1wynikiTabela <- kable(regresjaRazem1wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki/ubóstwo skrajne" = 5), align = "center")
+regresjaRazem1wynikiTabela
+```
+
+#### Tabela.9
+
+```{r}
+regresjaRazem1ocena <- as.data.frame(c(regresjaRazem1podsumowanie$sigma, regresjaRazem1podsumowanie$r.squared, regresjaRazem1podsumowanie$fstatistic))
+regresjaRazem1ocena <- as.data.frame(t(regresjaRazem1ocena[0:3,]))
+
+colnames(regresjaRazem1ocena ) <- c("Błąd standardowy reszt", "Współczynnik determinacji", "Statystyka testowa F")
+rownames(regresjaRazem1ocena ) <- "Wartość"
+
+regresjaRazem1ocenaTabela <- kable(regresjaRazem1ocena, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Ocena dopasowania modelu: wydatki/ubóstwo skrajne" = 4), align = "center")
+regresjaRazem1ocenaTabela
+```
+
+### Model regresji: ubóstwo relatywne
+
+```{r}
+regresjaRazem2 <- lm(Ubóstwo.relatywne ~ Razem, data = RegresjaDane)
+
+r_squaredRazem2 <- round(summary(regresjaRazem2)$r.squared, 4)
+p_valueRazem2 <- round(summary(regresjaRazem2)$coefficients[2, 4], 12)
+```
+
+#### Wykres.16
+
+```{r}
+regresjaRazem2wykres1 <- ggplot(RegresjaDane, aes(x = Razem, y = `Ubóstwo.relatywne`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$Ubóstwo.relatywne))) +
+  labs(title = "Korelacja: wydatki/ubóstwo relatywne",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Stopień ubóstwa relatywnego (w %)") +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata()
+
+regresjaRazem2wykres1
+```
+
+#### Wykres.17
+
+```{r}
+regresjaRazem2wykres2 <- ggplot(RegresjaDane, aes(x = Razem, y = `Ubóstwo.relatywne`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$Ubóstwo.relatywne))) +
+  geom_abline(intercept = coef(regresjaRazem2)[1], slope = coef(regresjaRazem2)[2], color = "red", size = 1.5) +
+  labs(title = "Wykres regresji: wydatki/ubóstwo relatywne",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Stopień ubóstwa relatywnego (w %)")+
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  geom_text(x = max(RegresjaDane$Razem), y = max(RegresjaDane$Ubóstwo.relatywne),
+            label = paste("Równanie regresji: y =", round(coef(regresjaRazem2)[1], 4), "+", round(coef(regresjaRazem2)[2], 4), "x\nWspółczynnik determinancji =", r_squaredRazem2, "\nWartość p =", p_valueRazem2),
+            hjust = 1, vjust = 1, color = "black", size = 2.5)
+
+regresjaRazem2wykres2
+```
+
+#### Tabela.10
+
+```{r}
+regresjaRazem2podsumowanie <- summary(regresjaRazem2)
+regresjaRazem2wyniki <- as.data.frame(regresjaRazem2podsumowanie$coefficients)
+
+colnames(regresjaRazem2wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazem2wyniki) <- c("Wyraz wolny", "Współczynnik kierunkowy regresji")
+
+regresjaRazem2wynikiTabela <- kable(regresjaRazem2wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki/ubóstwo relatywne" = 5), align = "center")
+regresjaRazem2wynikiTabela
+```
+
+#### Tabela.11
+
+```{r}
+regresjaRazem2ocena <- as.data.frame(c(regresjaRazem2podsumowanie$sigma, regresjaRazem2podsumowanie$r.squared, regresjaRazem2podsumowanie$fstatistic))
+regresjaRazem2ocena <- as.data.frame(t(regresjaRazem2ocena[0:3,]))
+
+colnames(regresjaRazem2ocena ) <- c("Błąd standardowy reszt", "Współczynnik determinacji", "Statystyka testowa F")
+rownames(regresjaRazem2ocena ) <- "Wartość"
+
+regresjaRazem2ocenaTabela <- kable(regresjaRazem2ocena, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Ocena dopasowania modelu: wydatki/ubóstwo relatywne" = 4), align = "center")
+regresjaRazem2ocenaTabela
+```
+
+### Model regresji: ubóstwo ustawowe
+
+```{r}
+regresjaRazem3 <- lm(Ubóstwo.ustawowe ~ Razem, data = RegresjaDane)
+
+r_squaredRazem3 <- round(summary(regresjaRazem3)$r.squared, 4)
+p_valueRazem3 <- round(summary(regresjaRazem3)$coefficients[2, 4], 12)
+```
+
+#### Wykres.18
+
+```{r}
+regresjaRazem3wykres1 <- ggplot(RegresjaDane, aes(x = Razem, y = `Ubóstwo.ustawowe`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$Ubóstwo.ustawowe))) +
+  labs(title = "Korelacja: wydatki/ubóstwo ustawowe",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Stopień ubóstwa ustawowego (w %)") +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata()
+regresjaRazem3wykres1
+```
+
+#### Wykres.19
+
+```{r}
+regresjaRazem3wykres2 <- ggplot(RegresjaDane, aes(x = Razem, y = `Ubóstwo.ustawowe`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$Ubóstwo.ustawowe))) +
+  geom_abline(intercept = coef(regresjaRazem3)[1], slope = coef(regresjaRazem3)[2], color = "red", size = 1.5) +
+  labs(title = "Wykres regresji: wydatki/ubóstwo ustawowe",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Stopień ubóstwa ustawowego (w %)")+
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  geom_text(x = max(RegresjaDane$Razem), y = max(RegresjaDane$Ubóstwo.ustawowe),
+            label = paste("Równanie regresji: y =", round(coef(regresjaRazem3)[1], 4), "+", round(coef(regresjaRazem3)[2], 4), "x\nWspółczynnik determinancji =", r_squaredRazem3, "\nWartość p =", p_valueRazem3),
+            hjust = 1, vjust = 1, color = "black", size = 2.5)
+
+regresjaRazem3wykres2
+```
+
+#### Tabela.12
+
+```{r}
+regresjaRazem3podsumowanie <- summary(regresjaRazem3)
+regresjaRazem3wyniki <- as.data.frame(regresjaRazem3podsumowanie$coefficients)
+
+colnames(regresjaRazem3wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazem3wyniki) <- c("Wyraz wolny", "Współczynnik kierunkowy regresji")
+
+regresjaRazem3wynikiTabela <- kable(regresjaRazem3wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki/ubóstwo ustawowe" = 5), align = "center")
+regresjaRazem3wynikiTabela
+```
+
+#### Tabel.13
+
+```{r}
+regresjaRazem3ocena <- as.data.frame(c(regresjaRazem3podsumowanie$sigma, regresjaRazem3podsumowanie$r.squared, regresjaRazem3podsumowanie$fstatistic))
+regresjaRazem3ocena <- as.data.frame(t(regresjaRazem3ocena[0:3,]))
+
+colnames(regresjaRazem3ocena ) <- c("Błąd standardowy reszt", "Współczynnik determinacji", "Statystyka testowa F")
+rownames(regresjaRazem3ocena ) <- "Wartość"
+
+regresjaRazem3ocenaTabela <- kable(regresjaRazem3ocena, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Ocena dopasowania modelu: wydatki/ubóstwo ustawowe" = 4), align = "center")
+regresjaRazem3ocenaTabela
+```
+
+### Model regresji: sfera niedostatku
+
+```{r}
+regresjaRazem4 <- lm(sfera.niedostatku ~ Razem, data = RegresjaDane)
+
+r_squaredRazem4 <- round(summary(regresjaRazem4)$r.squared, 4)
+p_valueRazem4 <- round(summary(regresjaRazem4)$coefficients[2, 4], 12)
+```
+
+#### Wykres.20 
+
+```{r}
+regresjaRazem4wykres1 <- ggplot(RegresjaDane, aes(x = Razem, y = `sfera.niedostatku`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$sfera.niedostatku))) +
+  labs(title = "Korelacja: wydatki/sfera niedostatku",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Zakres sfery niedostatku (w %)") +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata()
+
+regresjaRazem4wykres1
+```
+
+#### Wykres.21
+
+```{r}
+regresjaRazem4wykres2 <- ggplot(RegresjaDane, aes(x = Razem, y = `sfera.niedostatku`)) +
+  geom_point(color = "blue", shape = 16, size = 3) +
+  coord_cartesian(xlim = c(min(RegresjaDane$Razem), max(RegresjaDane$Razem)), ylim = c(0, max(RegresjaDane$sfera.niedostatku))) +
+  geom_abline(intercept = coef(regresjaRazem4)[1], slope = coef(regresjaRazem4)[2], color = "red", size = 1.5) +
+  labs(title = "Wykres regresji: wydatki/sfera niedostatku",
+       x = "Wydatki na politykę społeczną (w mld zł)",
+       y = "Zakres sfery niedostatku (w %)")+
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  geom_text(x = max(RegresjaDane$Razem), y = max(RegresjaDane$sfera.niedostatku),
+            label = paste("Równanie regresji: y =", round(coef(regresjaRazem4)[1], 4), "+", round(coef(regresjaRazem4)[2], 4), "x\nWspółczynnik determinancji =", r_squaredRazem4, "\nWartość p =", p_valueRazem4),
+            hjust = 1, vjust = 6, color = "black", size = 2.5)
+
+regresjaRazem4wykres2
+
+```
+
+#### Tabela.14
+
+```{r}
+regresjaRazem4podsumowanie <- summary(regresjaRazem4)
+regresjaRazem4wyniki <- as.data.frame(regresjaRazem4podsumowanie$coefficients)
+
+colnames(regresjaRazem4wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazem4wyniki) <- c("Wyraz wolny", "Współczynnik kierunkowy regresji")
+
+regresjaRazem4wynikiTabela <- kable(regresjaRazem4wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki/sfera niedostatku" = 5), align = "center")
+regresjaRazem4wynikiTabela
+```
+
+#### Tabela.15
+
+```{r}
+regresjaRazem4ocena <- as.data.frame(c(regresjaRazem4podsumowanie$sigma, regresjaRazem4podsumowanie$r.squared, regresjaRazem4podsumowanie$fstatistic))
+regresjaRazem4ocena <- as.data.frame(t(regresjaRazem4ocena[0:3,]))
+
+colnames(regresjaRazem4ocena ) <- c("Błąd standardowy reszt", "Współczynnik determinacji", "Statystyka testowa F")
+rownames(regresjaRazem4ocena ) <- "Wartość"
+
+regresjaRazem4ocenaTabela <- kable(regresjaRazem4ocena, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Ocena dopasowania modelu: wydatki/sfera niedostatku" = 4), align = "center")
+regresjaRazem4ocenaTabela
+```
+
+### Model regresji wielokrotnej: ubóstwo skrajne
+
+```{r}
+regresjaRazemMulti1 <- lm(Ubóstwo.skrajne ~ Pomoc.społeczna + Pozostałe.zadania.w.zakresie.polityki.społecznej + Rodzina + Obowiązkowe.ubezpieczenia.społeczne, data = RegresjaDane)
+```
+
+#### Tabela.16
+
+```{r}
+regresjaRazemMulti1podsumowanie <- summary(regresjaRazemMulti1)
+regresjaRazemMulti1wyniki <- as.data.frame(regresjaRazemMulti1podsumowanie$coefficients)
+
+colnames(regresjaRazemMulti1wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazemMulti1wyniki) <- c("Wyraz wolny", "Pomoc społeczna", "Pozostałe zadania w zakresie polityki społecznej", "Rodzina", "Obowiązkowe ubezpieczenia społeczne")
+
+regresjaRazemMulti1wynikiTabela <- kable(regresjaRazemMulti1wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki z poszczególnych działów/ubóstwo skrajne" = 5), align = "center")
+regresjaRazemMulti1wynikiTabela
+```
+
+### Model regresji wielokrotnej: ubóstwo relatywne
+
+```{r}
+regresjaRazemMulti2 <- lm(Ubóstwo.relatywne ~ Pomoc.społeczna + Pozostałe.zadania.w.zakresie.polityki.społecznej + Rodzina + Obowiązkowe.ubezpieczenia.społeczne, data = RegresjaDane)
+
+```
+
+#### Tabela.17
+
+```{r}
+regresjaRazemMulti2podsumowanie <- summary(regresjaRazemMulti2)
+regresjaRazemMulti2wyniki <- as.data.frame(regresjaRazemMulti2podsumowanie$coefficients)
+
+colnames(regresjaRazemMulti2wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazemMulti2wyniki) <- c("Wyraz wolny", "Pomoc społeczna", "Pozostałe zadania w zakresie polityki społecznej", "Rodzina", "Obowiązkowe ubezpieczenia społeczne")
+
+regresjaRazemMulti2wynikiTabela <- kable(regresjaRazemMulti2wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki z poszczególnych działów/ubóstwo relatywne" = 5), align = "center")
+regresjaRazemMulti2wynikiTabela
+
+```
+
+# Model regresji wielokrotnej: ubóstwo ustawowe
+
+```{r}
+regresjaRazemMulti3 <- lm(Ubóstwo.ustawowe ~ Pomoc.społeczna + Pozostałe.zadania.w.zakresie.polityki.społecznej + Rodzina + Obowiązkowe.ubezpieczenia.społeczne, data = RegresjaDane)
+```
+
+#### Tabela.18
+
+```{r}
+regresjaRazemMulti3podsumowanie <- summary(regresjaRazemMulti3)
+regresjaRazemMulti3wyniki <- as.data.frame(regresjaRazemMulti3podsumowanie$coefficients)
+
+colnames(regresjaRazemMulti3wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazemMulti3wyniki) <- c("Wyraz wolny", "Pomoc społeczna", "Pozostałe zadania w zakresie polityki społecznej", "Rodzina", "Obowiązkowe ubezpieczenia społeczne")
+
+regresjaRazemMulti3wynikiTabela <- kable(regresjaRazemMulti3wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki z poszczególnych działów/ubóstwo ustawowe" = 5), align = "center")
+regresjaRazemMulti3wynikiTabela
+```
+
+# Model regresji wielokrotnej: sfera niedostatku
+
+```{r}
+regresjaRazemmulti4 <- lm(sfera.niedostatku ~ Pomoc.społeczna + Pozostałe.zadania.w.zakresie.polityki.społecznej + Rodzina + Obowiązkowe.ubezpieczenia.społeczne, data = RegresjaDane)
+```
+
+#### Tabela.19
+
+```{r}
+regresjaRazemmulti4podsumowanie <- summary(regresjaRazemmulti4)
+regresjaRazemmulti4wyniki <- as.data.frame(regresjaRazemmulti4podsumowanie$coefficients)
+
+colnames(regresjaRazemmulti4wyniki) <- c("Estymata", "Błąd standardowy", "Wartość t", "Wartość p")
+rownames(regresjaRazemmulti4wyniki) <- c("Wyraz wolny", "Pomoc społeczna", "Pozostałe zadania w zakresie polityki społecznej", "Rodzina", "Obowiązkowe ubezpieczenia społeczne")
+
+regresjaRazemmulti4wynikiTabela <- kable(regresjaRazemmulti4wyniki, table.attr = "class='table'",align = "c") %>%
+  kable_paper(c("striped", "hover", "condensed", "responsive", full_width = F, position = "center")) %>% 
+  add_header_above(c("Wyniki regresji: wydatki z poszczególnych działów/sfera niedostatku" = 5), align = "center")
+regresjaRazemmulti4wynikiTabela
+```

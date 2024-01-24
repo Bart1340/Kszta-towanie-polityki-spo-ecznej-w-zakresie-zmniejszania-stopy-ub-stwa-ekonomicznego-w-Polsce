@@ -1,5 +1,6 @@
 # ProjektPrzejsciowy
 Repozytorium projektu przejściowego na Zarządzanie Big Data
+
 Zawiera:
 - plik R Markdown z kodem, wykresami i tabelami
 - plik XLSX z danymi użytymi do projektu

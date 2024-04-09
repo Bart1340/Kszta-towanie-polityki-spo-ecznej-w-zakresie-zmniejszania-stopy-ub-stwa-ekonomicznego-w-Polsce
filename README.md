@@ -1,4 +1,4 @@
-# Kształtowanie polityki społecznej w zakresie zmniejszania stopy ubóstwa ekonomicznego w Polsce
+# Kształtowanie polityki społecznej w zakresie zmniejszania stopy ubóstwa ekonomicznego w Polsce. Ocena efektywności obecnych narzędzi poprzez analizę wydatków budżetowych z wykorzystaniem modelu regresji liniowej
 Repozytorium projektu
 
 Zawiera:
